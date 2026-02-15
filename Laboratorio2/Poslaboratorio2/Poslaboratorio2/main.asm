@@ -29,17 +29,18 @@ OUT     SPH, R16
 /****************************************/
 // Configuracion MCU
 SETUP:
-	//Desactivar TX y DX en D0 y D1
+	//Desactivar TX y RX en D0 y D1
 	CLR r16
 	STS UCSR0B, r16
 
 	//Configuracion para el clock
 	LDI  R16, 0x80
-	STS  CLKPR, R16      //Se carga a CLKPR para habilitar el cambio
+	STS  CLKPR, R16 //Se carga a CLKPR para habilitar el cambio
 	LDI  R16, 0x04       
 	STS  CLKPR, R16
+
 	//Configuracion del timer0 
-	LDI R16, 0b00000011 //dividir por 64
+	LDI R16, 0b00000011 //dividir por 16
 	OUT TCCR0B, R16
 	LDI R16, 100 //Valor inicial para timer
 	OUT TCNT0, R16
@@ -118,6 +119,7 @@ TIMER:
 	RJMP MAIN_LOOP
 
 CONTADOR:
+	//Se usa para decidir si se ira a sumar o a restar
 	CPI  R20, 0b00000001
 	BREQ SUMAR_LOOP
 	CPI  R20, 0b00000010
@@ -125,6 +127,7 @@ CONTADOR:
 	RJMP MAIN_LOOP
 
 SUMAR_LOOP:
+	//Encargado de incrementar un registro para mostrar un numero mayor
 	LDI ZH, HIGH(disp7seg<<1)
 	LDI ZL, LOW(disp7seg<<1)
 	INC R22
@@ -138,6 +141,7 @@ SUMAR_LOOP:
 	RJMP MAIN_LOOP
 	
 RESTAR_LOOP:
+	// Resta, es en encargado de decrecer el registro para mostrar un numero menor
 	LDI ZH, HIGH(disp7seg<<1)
 	LDI ZL, LOW(disp7seg<<1)
 	DEC R22
@@ -151,6 +155,7 @@ RESTAR_LOOP:
 	RJMP MAIN_LOOP
 
 COMPARACION:
+	// Se encarga de hacer el toggle de la LED de alarma y limpia el contador de LEDs
 	OUT  PORTB, r18
 	SBI  PINC, PINC2
 	CLR  r18
@@ -158,6 +163,7 @@ COMPARACION:
 /****************************************/
 // NON-Interrupt subroutines
 VERIFICACION:
+	//Verifica que no haya botones presionados
 	IN   R19, PINC
 	ANDI R19, 0b00000011 //Usamos una mascara para dejar solo los bits del 0 al 4
 	CPI  R19, 0b00000000
